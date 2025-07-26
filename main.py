@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 import cv2
 import numpy as np
 import qtawesome as qta
-from PySide6.QtMultimedia import QMediaPlayer
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtCore import Qt, QUrl, QTime, QEvent, Signal
 from PySide6.QtGui import QImage, QPixmap, QIcon, QKeyEvent, QPainter, QKeySequence
@@ -54,7 +54,12 @@ class VideoControlWidget(QWidget):
         super().__init__(parent)
         self.media_player = QMediaPlayer()
         self.video_widget = QVideoWidget()
+        self.audio_output = QAudioOutput()
         self.media_player.setVideoOutput(self.video_widget)
+        self.media_player.setAudioOutput(self.audio_output)
+        
+        self.media_player.setAudioOutput(self.audio_output)
+        self.audio_output.setVolume(0.8)
 
         self.start_time = 0
         self.end_time = 0
