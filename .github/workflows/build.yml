@@ -25,7 +25,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller main.py --onefile --noconfirm --name boni
+          pyinstaller main.py --onefile --noconfirm --name boni --add-data "boni.png:."
 
       - name: Upload EXE to Release
         uses: softprops/action-gh-release@v2

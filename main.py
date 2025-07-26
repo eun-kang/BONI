@@ -157,6 +157,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("BONI")
         self.setGeometry(100, 100, 1280, 720)
         
+         # Set application icon
+        icon = QIcon("boni.png")
+        self.setWindowIcon(icon)
         # File data storage
         self.file_data = {}
         self.video_capture = None
