@@ -349,23 +349,23 @@ class MainWindow(QMainWindow):
 
     def keyPressEvent(self, event: QKeyEvent):
         # Play/Pause with spacebar - ensure it works globally
-        if event.key() == Qt.Key.Key_P and event.modifiers() == Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_P:
             self.toggle_play_pause()
             event.accept()  # Mark event as handled
             return
             
         # Set start with Ctrl+1
-        if event.key() == Qt.Key.Key_1 and event.modifiers() == Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_1:
             self.set_start_keyframe()
             return
             
         # Set end with Ctrl+2
-        if event.key() == Qt.Key.Key_2 and event.modifiers() == Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_2:
             self.set_end_keyframe()
             return
             
         # Record with Ctrl+Enter
-        if event.key() == Qt.Key.Key_Return and event.modifiers() == Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_Return:
             self.video_control_widget.record_button.click()
             return
 
