@@ -1,4 +1,4 @@
-# BONI: Behavioral Observation with Noted Intervals
+# BONI: Bookmarking Of Notable Intervals
 
 BONI is a video analysis tool designed for researchers and analysts to precisely mark and measure intervals of interest in video footage. The application allows users to define start and end keyframes, calculate time intervals between them, and record these observations for further analysis.
 
