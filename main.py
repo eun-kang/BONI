@@ -72,7 +72,8 @@ class VideoControlWidget(QWidget):
         
         self.play_icon = qta.icon('fa5s.play')
         self.pause_icon = qta.icon('fa5s.pause')
-        self.play_pause_button = QPushButton(self.play_icon, "")
+        self.play_pause_button = QPushButton()
+        self.play_pause_button.setIcon(self.play_icon)
         self.play_pause_button.setFlat(True)
 
         slider_layout.addWidget(self.slider)
@@ -153,7 +154,7 @@ class MainWindow(QMainWindow):
     """메인 윈도우: 전체 레이아웃과 파일 목록을 관리"""
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Keyframe Selector")
+        self.setWindowTitle("BONI")
         self.setGeometry(100, 100, 1280, 720)
         
         # File data storage
@@ -221,7 +222,13 @@ class MainWindow(QMainWindow):
                         items = self.file_list_widget.findItems(file_name, Qt.MatchExactly)
                         if not items:
                             self.file_list_widget.addItem(file_name)
-                            self.file_data[file_path] = {'start': 0, 'end': 0, 'start_frame': None, 'end_frame': None}
+                            self.file_data[file_path] = {
+            'start': 0, 
+            'end': 0, 
+            'start_frame': None, 
+            'end_frame': None,
+            'intervals': []  # Store intervals for this file
+        }
                 return True
         return super().eventFilter(source, event)
 
@@ -230,7 +237,14 @@ class MainWindow(QMainWindow):
             if self.video_capture:
                 self.video_capture.release()
                 self.video_capture = None
+            self.update_ui_for_current_file()
             return
+        
+        # Pause playback before switching files
+        player = self.video_control_widget.media_player
+        if player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            player.pause()
+            self.video_control_widget.play_pause_button.setIcon(self.video_control_widget.play_icon)
         
         file_path = self.get_selected_filepath()
         if file_path:
@@ -239,6 +253,10 @@ class MainWindow(QMainWindow):
                 self.video_capture.release()
             self.video_capture = cv2.VideoCapture(file_path)
             # The mediaStatusChanged signal will handle the rest
+            
+        # Update UI including the table for the new file
+        self.update_ui_for_current_file()
+        self.update_table_for_current_file()
             
     def media_status_changed(self, status):
         if status == QMediaPlayer.MediaStatus.LoadedMedia:
@@ -327,6 +345,27 @@ class MainWindow(QMainWindow):
             button.setIcon(self.video_control_widget.pause_icon)
 
     def keyPressEvent(self, event: QKeyEvent):
+        # Play/Pause with spacebar - ensure it works globally
+        if event.key() == Qt.Key.Key_P and event.modifiers() == Qt.ControlModifier:
+            self.toggle_play_pause()
+            event.accept()  # Mark event as handled
+            return
+            
+        # Set start with Ctrl+1
+        if event.key() == Qt.Key.Key_1 and event.modifiers() == Qt.ControlModifier:
+            self.set_start_keyframe()
+            return
+            
+        # Set end with Ctrl+2
+        if event.key() == Qt.Key.Key_2 and event.modifiers() == Qt.ControlModifier:
+            self.set_end_keyframe()
+            return
+            
+        # Record with Ctrl+Enter
+        if event.key() == Qt.Key.Key_Return and event.modifiers() == Qt.ControlModifier:
+            self.video_control_widget.record_button.click()
+            return
+
         # Video seeking with arrow keys
         if not self.table_widget.hasFocus():
             player = self.video_control_widget.media_player
@@ -370,11 +409,32 @@ class MainWindow(QMainWindow):
         QApplication.clipboard().setText(s)
 
     def add_record_to_table(self, start, end, interval):
-        row_count = self.table_widget.rowCount()
-        self.table_widget.insertRow(row_count)
-        self.table_widget.setItem(row_count, 0, QTableWidgetItem(start))
-        self.table_widget.setItem(row_count, 1, QTableWidgetItem(end))
-        self.table_widget.setItem(row_count, 2, QTableWidgetItem(interval))
+        file_path = self.get_selected_filepath()
+        if not file_path:
+            return
+            
+        # Add record to current file's interval list
+        self.file_data[file_path]['intervals'].append((start, end, interval))
+        self.update_table_for_current_file()
+        
+    def update_table_for_current_file(self):
+        """Update table widget with intervals for the current file"""
+        self.table_widget.setRowCount(0)  # Clear table
+        
+        file_path = self.get_selected_filepath()
+        if not file_path:
+            return
+            
+        intervals = self.file_data[file_path].get('intervals', [])
+        for start, end, interval in intervals:
+            row_count = self.table_widget.rowCount()
+            self.table_widget.insertRow(row_count)
+            self.table_widget.setItem(row_count, 0, QTableWidgetItem(start))
+            self.table_widget.setItem(row_count, 1, QTableWidgetItem(end))
+            self.table_widget.setItem(row_count, 2, QTableWidgetItem(interval))
+            
+        # Resize columns after updating
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def format_time(self, ms):
         time = QTime(0, 0, 0, 0).addMSecs(ms)
@@ -383,6 +443,12 @@ class MainWindow(QMainWindow):
     def update_ui_for_current_file(self):
         file_path = self.get_selected_filepath()
         if not file_path:
+            # Clear all UI elements
+            self.video_control_widget.start_time_label.setText("Start: 00:00:00.000")
+            self.video_control_widget.end_time_label.setText("End: 00:00:00.000")
+            self.video_control_widget.interval_label.setText("Interval: 00:00:00.000")
+            self.video_control_widget.start_frame_widget.setPixmap(QPixmap())
+            self.video_control_widget.end_frame_widget.setPixmap(QPixmap())
             return
 
         data = self.file_data[file_path]
@@ -408,6 +474,9 @@ class MainWindow(QMainWindow):
             self.video_control_widget.end_frame_widget.setPixmap(end_frame)
         else:
             self.video_control_widget.end_frame_widget.setPixmap(QPixmap())
+            
+        # Also update the table for the current file
+        self.update_table_for_current_file()
 
 
 if __name__ == '__main__':
