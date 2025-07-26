@@ -1,4 +1,4 @@
-# BONI: Behavioral Observation with Noted Intervals
+# BONI: Bookmarking Of Notable Intervals
 
 BONI is a video analysis tool designed for researchers and analysts to precisely mark and measure intervals of interest in video footage. The application allows users to define start and end keyframes, calculate time intervals between them, and record these observations for further analysis.
 
@@ -19,27 +19,8 @@ BONI is a video analysis tool designed for researchers and analysts to precisely
 
 ## System Requirements
 
-- Python 3.9+
 - macOS (tested on Sonoma)
 - Windows and Linux support (theoretically possible but not tested)
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/boni.git
-cd boni
-```
-
-2. Install dependencies:
-```bash
-pip install PySide6 opencv-python qtawesome numpy
-```
-
-3. Run the application:
-```bash
-python3.9 main.py
-```
 
 ## Usage
 
